@@ -2,14 +2,16 @@ name: Dev Release
 
 on:
   push:
-    branches: [ develop ]
+    branches:
+      - develop
+      - main
 
 jobs:
   build:
     uses: ./.github/workflows/build.yaml
     secrets: inherit
 
-  package-test-artifacts:
+  create-dev-release:
     needs: build
     runs-on: ubuntu-latest
 
@@ -21,11 +23,23 @@ jobs:
       - name: Get version info
         id: version
         run: |
+          BRANCH_NAME=${GITHUB_REF#refs/heads/}
           SHA_SHORT=$(git rev-parse --short HEAD)
-          DESCRIBE=$(git describe --tags --always --dirty)
+          TIMESTAMP=$(date +%Y%m%d-%H%M%S)
+          
+          # Set prefix based on branch
+          if [ "$BRANCH_NAME" = "develop" ]; then
+            PREFIX="dev"
+          elif [ "$BRANCH_NAME" = "main" ]; then
+            PREFIX="rc"
+          fi
+          
+          VERSION="${PREFIX}-${TIMESTAMP}-${SHA_SHORT}"
+          
+          echo "prefix=$PREFIX" >> $GITHUB_OUTPUT
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "sha=$SHA_SHORT" >> $GITHUB_OUTPUT
-          echo "describe=$DESCRIBE" >> $GITHUB_OUTPUT
-          echo "timestamp=$(date +%Y%m%d-%H%M%S)" >> $GITHUB_OUTPUT
+          echo "timestamp=$TIMESTAMP" >> $GITHUB_OUTPUT
 
       - name: Download all artifacts
         uses: actions/download-artifact@v4
@@ -33,34 +47,38 @@ jobs:
           pattern: firmware-*
           path: artifacts
 
-      - name: Package test build
+      - name: Prepare release files
         run: |
-          mkdir -p test-build
+          mkdir -p release
           
-          # Copy and rename files with version info
           for dir in artifacts/firmware-*; do
             env_name=$(basename "$dir" | sed 's/firmware-//')
             if [ -f "$dir/firmware.hex" ]; then
-              cp "$dir/firmware.hex" "test-build/${env_name}-${{ steps.version.outputs.describe }}.hex"
+              cp "$dir/firmware.hex" "release/fsdiy-spad-${env_name}-${{ steps.version.outputs.version }}.hex"
             fi
           done
           
-          cd test-build
+          cd release
           sha256sum *.hex > checksums.txt
-          
-          # Create build info file
-          cat > build-info.txt << EOF
-          Build Type: Test/Development
-          Git SHA: ${{ steps.version.outputs.sha }}
-          Git Describe: ${{ steps.version.outputs.describe }}
-          Branch: develop
-          Timestamp: ${{ steps.version.outputs.timestamp }}
-          Workflow Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-          EOF
 
-      - name: Upload test build package
-        uses: actions/upload-artifact@v4
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
         with:
-          name: test-build-${{ steps.version.outputs.describe }}
-          path: test-build/
-          retention-days: 30
+          tag_name: ${{ steps.version.outputs.version }}
+          name: ${{ steps.version.outputs.prefix == 'dev' && 'dev' || 'rc' }}-${{ steps.version.outputs.timestamp }}
+          files: release/*
+          prerelease: true
+          body: |
+            **Build Type:** `${{ steps.version.outputs.prefix }}`
+            **Version:** `${{ steps.version.outputs.version }}`
+            **Commit:** `${{ steps.version.outputs.sha }}`
+            **Time:** `${{ steps.version.outputs.timestamp }}`
+            
+            ### Firmware Files:
+            - **G1000 NXi PFD1**: `fsdiy-spad-g1000nxi_pfd1-${{ steps.version.outputs.version }}.hex`
+            - **G1000 NXi MFD**: `fsdiy-spad-g1000nxi_mfd-${{ steps.version.outputs.version }}.hex`
+            - **G1000 NXi PFD2**: `fsdiy-spad-g1000nxi_pfd2-${{ steps.version.outputs.version }}.hex`
+            - **GMA1347**: `fsdiy-spad-gma1347-${{ steps.version.outputs.version }}.hex`
+            - **GCU478**: `fsdiy-spad-gcu478-${{ steps.version.outputs.version }}.hex`
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
