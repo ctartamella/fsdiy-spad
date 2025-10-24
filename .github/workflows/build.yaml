@@ -63,7 +63,7 @@ jobs:
           echo "Building for environment: " $SPAD_DEVICENAME
           echo "Version: " $SPAD_DEVICEVERSION
           
-          export PLATFORMIO_BUILD_FLAGS = "-DSPAD_AUTHKEY=\"$SPAD_AUTHKEY\" -DSPAD_DEVICEVERSION=\"$SPAD_DEVICEVERSION\" -DSPAD_DEVICEID=\"$SPAD_DEVICEID\" -DSPAD_DEVICENAME=\"$SPAD_DEVICENAME\"
+          export PLATFORMIO_BUILD_FLAGS="-DSPAD_AUTHKEY=\"$SPAD_AUTHKEY\" -DSPAD_DEVICEVERSION=\"$SPAD_DEVICEVERSION\" -DSPAD_DEVICEID=\"$SPAD_DEVICEID\" -DSPAD_DEVICENAME=\"$SPAD_DEVICENAME\""
           
           echo "Build flags: " $PLATFORMIO_BUILD_FLAGS
           pio run -e ${{ matrix.environment }}
