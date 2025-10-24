@@ -1,12 +1,17 @@
-name: FSDIYSpad Build
+name: Build Firmware
 
 on:
   push:
     branches: [ main, develop ]
   pull_request:
     branches: [ main, develop ]
-  release:
-    types: [ created ]
+  workflow_call:
+    inputs:
+      upload_artifacts:
+        description: 'Whether to upload artifacts'
+        required: false
+        type: boolean
+        default: true
 
 jobs:
   build:
@@ -23,6 +28,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  # Full history for git describe
 
       - name: Cache pip
         uses: actions/cache@v3
@@ -41,7 +48,7 @@ jobs:
             ~/.platformio/platforms
           key: ${{ runner.os }}-pio-${{ hashFiles('**/platformio.ini') }}
           restore-keys: |
-            ${{ runner.os }}-pio-
+            ${{ runner.os }}-pio
 
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -59,10 +66,6 @@ jobs:
           SPAD_DEVICEID: "{${{ matrix.environment == 'g1000nxi_pfd1' && secrets.G1000PFD1_DEVICEID || matrix.environment == 'g1000nxi_mfd' && secrets.G1000MFD_DEVICEID || matrix.environment == 'g1000nxi_pfd2' && secrets.G1000PFD2_DEVICEID || matrix.environment == 'gma1347' && secrets.GMA1347_DEVICEID || matrix.environment == 'gcu478' && secrets.GCU478_DEVICEID }}}"
           SPAD_DEVICEVERSION: $GIT_VERSION
           SPAD_AUTHKEY: "${{ secrets.SPAD_AUTHKEY }}"
-#          SPAD_DEVICENAME: DEVICE
-#          SPAD_DEVICEID: "{GUID}"
-#          SPAD_DEVICEVERSION: $GIT_VERSION
-#          SPAD_AUTHKEY: "${{ secrets.SPAD_AUTHKEY }}"
         run: |          
           echo "Building for environment: " $SPAD_DEVICENAME
           echo "Version: " $SPAD_DEVICEVERSION
@@ -71,8 +74,11 @@ jobs:
           
           echo "Build flags: " $PLATFORMIO_BUILD_FLAGS
           pio run -e ${{ matrix.environment }}
+
       - name: Upload firmware artifact
+        if: ${{ inputs.upload_artifacts != false }}
         uses: actions/upload-artifact@v4
         with:
           name: firmware-${{ matrix.environment }}
           path: .pio/build/${{ matrix.environment }}/firmware.hex
+          retention-days: 90

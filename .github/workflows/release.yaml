@@ -3,51 +3,89 @@ name: Release
 on:
   push:
     tags:
-      - 'v*'
+      - 'v*.*.*'  # Semantic versioning: v1.0.0, v2.1.3, etc.
 
 jobs:
-  release:
+  build:
+    uses: ./.github/workflows/build.yaml
+    secrets: inherit
+
+  create-release:
+    needs: build
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v3
-
-      - name: Set up Python
-        uses: actions/setup-python@v4
         with:
-          python-version: '3.11'
-
-      - name: Install PlatformIO
-        run: |
-          python -m pip install --upgrade pip
-          pip install --upgrade platformio
+          fetch-depth: 0
 
       - name: Get version
         id: version
-        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
-
-      - name: Create dummy secrets
         run: |
-          cat > platformio_override.ini << EOF
-          [env]
-          build_flags = 
-              -DSPAD_AUTH_KEY='"CONFIGURE_YOUR_KEY"'
-              -DFIRMWARE_VERSION='"${{ steps.version.outputs.VERSION }}"'
-          EOF
+          VERSION=${GITHUB_REF#refs/tags/}
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "version_number=${VERSION#v}" >> $GITHUB_OUTPUT
 
-      - name: Build firmware
-        run: pio run -e megaatmega2560
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: firmware-*
+          path: artifacts
 
-      - name: Prepare release
+      - name: Prepare release files
         run: |
           mkdir -p release
-          cp .pio/build/megaatmega2560/firmware.hex release/firmware-mega2560-${{ steps.version.outputs.VERSION }}.hex
+          
+          # Copy and rename files with version
+          for dir in artifacts/firmware-*; do
+            env_name=$(basename "$dir" | sed 's/firmware-//')
+            if [ -f "$dir/firmware.hex" ]; then
+              cp "$dir/firmware.hex" "release/fsdiy-spad-${env_name}-${{ steps.version.outputs.version }}.hex"
+            fi
+          done
+          
           cd release
           sha256sum *.hex > checksums.txt
+          
+          # Create release info file
+          cat > RELEASE-INFO.txt << EOF
+          FSDIY SPAD Firmware Release
+          ===========================
+          Version: ${{ steps.version.outputs.version }}
+          Release Date: $(date +%Y-%m-%d)
+          
+          Included Firmware:
+          - G1000 NXi PFD1
+          - G1000 NXi MFD
+          - G1000 NXi PFD2
+          - GMA1347 Audio Panel
+          - GCU478 Autopilot
+          
+          Installation:
+          1. Download the appropriate .hex file for your device
+          2. Flash using your preferred Arduino upload tool
+          3. Verify checksums.txt for file integrity
+          
+          For more information, see the README.md in the repository.
+          EOF
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
           files: release/*
-env:
-  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          generate_release_notes: true
+          draft: false
+          prerelease: false
+          body: |
+            ## FSDIY SPAD Firmware ${{ steps.version.outputs.version }}
+            
+            ### Download the firmware for your device:
+            - **G1000 NXi PFD1**: `fsdiy-spad-g1000nxi_pfd1-${{ steps.version.outputs.version }}.hex`
+            - **G1000 NXi MFD**: `fsdiy-spad-g1000nxi_mfd-${{ steps.version.outputs.version }}.hex`
+            - **G1000 NXi PFD2**: `fsdiy-spad-g1000nxi_pfd2-${{ steps.version.outputs.version }}.hex`
+            - **GMA1347**: `fsdiy-spad-gma1347-${{ steps.version.outputs.version }}.hex`
+            - **GCU478**: `fsdiy-spad-gcu478-${{ steps.version.outputs.version }}.hex`
+            
+            See `checksums.txt` for SHA256 checksums.
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -1,0 +1,66 @@
+name: Dev Release
+
+on:
+  push:
+    branches: [ develop ]
+
+jobs:
+  build:
+    uses: ./.github/workflows/build.yaml
+    secrets: inherit
+
+  package-test-artifacts:
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Get version info
+        id: version
+        run: |
+          SHA_SHORT=$(git rev-parse --short HEAD)
+          DESCRIBE=$(git describe --tags --always --dirty)
+          echo "sha=$SHA_SHORT" >> $GITHUB_OUTPUT
+          echo "describe=$DESCRIBE" >> $GITHUB_OUTPUT
+          echo "timestamp=$(date +%Y%m%d-%H%M%S)" >> $GITHUB_OUTPUT
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: firmware-*
+          path: artifacts
+
+      - name: Package test build
+        run: |
+          mkdir -p test-build
+          
+          # Copy and rename files with version info
+          for dir in artifacts/firmware-*; do
+            env_name=$(basename "$dir" | sed 's/firmware-//')
+            if [ -f "$dir/firmware.hex" ]; then
+              cp "$dir/firmware.hex" "test-build/${env_name}-${{ steps.version.outputs.describe }}.hex"
+            fi
+          done
+          
+          cd test-build
+          sha256sum *.hex > checksums.txt
+          
+          # Create build info file
+          cat > build-info.txt << EOF
+          Build Type: Test/Development
+          Git SHA: ${{ steps.version.outputs.sha }}
+          Git Describe: ${{ steps.version.outputs.describe }}
+          Branch: develop
+          Timestamp: ${{ steps.version.outputs.timestamp }}
+          Workflow Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          EOF
+
+      - name: Upload test build package
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-build-${{ steps.version.outputs.describe }}
+          path: test-build/
+          retention-days: 30
