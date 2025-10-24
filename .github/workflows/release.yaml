@@ -19,13 +19,6 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Get version
-        id: version
-        run: |
-          VERSION=${GITHUB_REF#refs/tags/}
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
-          echo "version_number=${VERSION#v}" >> $GITHUB_OUTPUT
-
       - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
@@ -40,7 +33,7 @@ jobs:
           for dir in artifacts/firmware-*; do
             env_name=$(basename "$dir" | sed 's/firmware-//')
             if [ -f "$dir/firmware.hex" ]; then
-              cp "$dir/firmware.hex" "release/fsdiy-spad-${env_name}-${{ steps.version.outputs.version }}.hex"
+              cp "$dir/firmware.hex" "release/fsdiy-spad-${env_name}-${{ needs.build.outputs.version }}.hex"
             fi
           done
           
@@ -51,7 +44,7 @@ jobs:
           cat > RELEASE-INFO.txt << EOF
           FSDIY SPAD Firmware Release
           ===========================
-          Version: ${{ steps.version.outputs.version }}
+          Version: ${{ needs.build.outputs.version }}
           Release Date: $(date +%Y-%m-%d)
           
           Included Firmware:
@@ -76,19 +69,20 @@ jobs:
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
+          tag_name: ${{ ste }}
           files: release/*
           generate_release_notes: true
           draft: false
           prerelease: false
           body: |
-            ## FSDIY SPAD Firmware ${{ steps.version.outputs.version }}
+            ## FSDIY SPAD Firmware ${{ needs.build.outputs.version }}
             
             ### Download the firmware for your device:
-            - **G1000 NXi PFD1**: `fsdiy-spad-g1000nxi_pfd1-${{ steps.version.outputs.version }}.hex`
-            - **G1000 NXi MFD**: `fsdiy-spad-g1000nxi_mfd-${{ steps.version.outputs.version }}.hex`
-            - **G1000 NXi PFD2**: `fsdiy-spad-g1000nxi_pfd2-${{ steps.version.outputs.version }}.hex`
-            - **GMA1347**: `fsdiy-spad-gma1347-${{ steps.version.outputs.version }}.hex`
-            - **GCU478**: `fsdiy-spad-gcu478-${{ steps.version.outputs.version }}.hex`
+            - **G1000 NXi PFD1**: `fsdiy-spad-g1000nxi_pfd1-${{ needs.build.outputs.version }}.hex`
+            - **G1000 NXi MFD**: `fsdiy-spad-g1000nxi_mfd-${{ needs.build.outputs.version }}.hex`
+            - **G1000 NXi PFD2**: `fsdiy-spad-g1000nxi_pfd2-${{ needs.build.outputs.version }}.hex`
+            - **GMA1347**: `fsdiy-spad-gma1347-${{ needs.build.outputs.version }}.hex`
+            - **GCU478**: `fsdiy-spad-gcu478-${{ needs.build.outputs.version }}.hex`
             
             See `checksums.txt` for SHA256 checksums.
         env:

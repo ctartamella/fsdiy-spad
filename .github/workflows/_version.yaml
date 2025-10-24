@@ -1,0 +1,62 @@
+name: Compute Version
+on:
+  workflow_call:
+    outputs:
+      version:
+        description: 'The version of the build'
+        value: ${{ jobs.compute-version.outputs.version }}
+      prefix:
+        description: 'The build prefix'
+        value: ${{ jobs.compute-version.outputs.prefix }}
+      sha:
+        description: 'The build commit SHA'
+        value: ${{ jobs.compute-version.outputs.sha }}
+
+jobs:
+  compute-version:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      prefix: ${{ steps.version.outputs.prefix }}
+      sha: ${{ steps.version.outputs.sha }}
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Get version info
+        id: version
+        run: |
+          BRANCH_NAME=${GITHUB_REF#refs/heads/}
+          SHA_SHORT=$(git rev-parse --short HEAD)
+
+          # Try to get the most recent tag matching v*.*.*
+          TAG=$(git describe --tags --match "v*.*.*" --abbrev=0 2>/dev/null || echo "")
+
+          # Check if current commit is tagged
+          CURRENT_TAG=$(git describe --exact-match --tags --match "v*.*.*" 2>/dev/null || echo "")
+
+          # Set prefix based on branch
+          if [ "$BRANCH_NAME" = "develop" ]; then
+            PREFIX="dev"
+          elif [ "$BRANCH_NAME" = "main" ]; then
+            PREFIX="rc"
+          else
+            PREFIX="nightly"
+          fi
+
+          # Determine version
+          if [ -n "$CURRENT_TAG" ]; then
+            # Current commit is tagged, use the tag
+            VERSION="$CURRENT_TAG"
+          elif [ -n "$TAG" ]; then
+            # There's a tag in history, use tag + prefix + sha
+            VERSION="${TAG}-${PREFIX}-${SHA_SHORT}"
+          else
+            # No tags found, use prefix + sha
+            VERSION="${PREFIX}-${SHA_SHORT}"
+          fi
+
+          echo "prefix=$PREFIX" >> $GITHUB_OUTPUT
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "sha=$SHA_SHORT" >> $GITHUB_OUTPUT

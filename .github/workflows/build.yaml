@@ -10,9 +10,24 @@ on:
         required: false
         type: boolean
         default: true
+    outputs:
+      version:
+        description: 'The version of the build'
+        value: ${{ jobs.compute-version.outputs.version }}
+      prefix:
+        description: 'The build prefix'
+        value: ${{ jobs.compute-version.outputs.prefix }}
+      sha:
+        description: 'The build commit SHA'
+        value: ${{ jobs.compute-version.outputs.sha }}
 
 jobs:
+  compute-version:
+    uses: ./.github/workflows/_version.yaml
+    secrets: inherit
+
   build:
+    needs: compute-version
     runs-on: ubuntu-latest
 
     strategy:
@@ -60,15 +75,15 @@ jobs:
 
       - name: Build firmware
         env:
-          SPAD_DEVICENAME: ${{ matrix.environment == 'g1000nxi_pfd1' && 'FSDIY G1000 NXi PFD1' || matrix.environment == 'g1000nxi_mfd' && 'FSDIY G1000 NXi MFD' || matrix.environment == 'g1000nxi_pfd2' && 'FSDIY G1000 NXi PFD2' || matrix.environment == 'gma1347' && 'FSDIY GMA1347' || matrix.environment == 'gcu478' && 'FSDIY GCU478' }}
-          SPAD_DEVICEID: "{${{ matrix.environment == 'g1000nxi_pfd1' && secrets.G1000PFD1_DEVICEID || matrix.environment == 'g1000nxi_mfd' && secrets.G1000MFD_DEVICEID || matrix.environment == 'g1000nxi_pfd2' && secrets.G1000PFD2_DEVICEID || matrix.environment == 'gma1347' && secrets.GMA1347_DEVICEID || matrix.environment == 'gcu478' && secrets.GCU478_DEVICEID }}}"
-          SPAD_DEVICEVERSION: $GIT_VERSION
-          SPAD_AUTHKEY: "${{ secrets.SPAD_AUTHKEY }}"
+          DEVICENAME: ${{ matrix.environment == 'g1000nxi_pfd1' && 'FSDIY G1000 NXi PFD1' || matrix.environment == 'g1000nxi_mfd' && 'FSDIY G1000 NXi MFD' || matrix.environment == 'g1000nxi_pfd2' && 'FSDIY G1000 NXi PFD2' || matrix.environment == 'gma1347' && 'FSDIY GMA1347' || matrix.environment == 'gcu478' && 'FSDIY GCU478' }}
+          DEVICEID: "{${{ matrix.environment == 'g1000nxi_pfd1' && secrets.G1000PFD1_DEVICEID || matrix.environment == 'g1000nxi_mfd' && secrets.G1000MFD_DEVICEID || matrix.environment == 'g1000nxi_pfd2' && secrets.G1000PFD2_DEVICEID || matrix.environment == 'gma1347' && secrets.GMA1347_DEVICEID || matrix.environment == 'gcu478' && secrets.GCU478_DEVICEID }}}"
+          FIRMWAREVERSION: ${{ needs.compute-version.outputs.version }}
+          AUTHKEY: "${{ secrets.SPAD_AUTHKEY }}"
         run: |          
-          echo "Building for environment: " $SPAD_DEVICENAME
-          echo "Version: " $SPAD_DEVICEVERSION
+          echo "Building for environment: " $DEVICENAME
+          echo "Version: " $DEVICEVERSION
           
-          export PLATFORMIO_BUILD_FLAGS="-DSPAD_AUTHKEY=\"\\\"$SPAD_AUTHKEY\"\\\" -DSPAD_DEVICEVERSION=\"\\\"$SPAD_DEVICEVERSION\"\\\" -DSPAD_DEVICEID=\"\\\"$SPAD_DEVICEID\"\\\" -DSPAD_DEVICENAME=\"\\\"$SPAD_DEVICENAME\"\\\""
+          export PLATFORMIO_BUILD_FLAGS="-DSPAD_AUTHKEY=\"\\\"$AUTHKEY\"\\\" -DSPAD_FRIMWAREVERSION=\"\\\"$DEVICEVERSION\"\\\" -DSPAD_DEVICEID=\"\\\"$DEVICEID\"\\\" -DSPAD_DEVICENAME=\"\\\"$DEVICENAME\"\\\""
           
           echo "Build flags: " $PLATFORMIO_BUILD_FLAGS
           pio run -e ${{ matrix.environment }}

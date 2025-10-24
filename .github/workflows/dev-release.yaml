@@ -25,27 +25,6 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Get version info
-        id: version
-        run: |
-          BRANCH_NAME=${GITHUB_REF#refs/heads/}
-          SHA_SHORT=$(git rev-parse --short HEAD)
-          TIMESTAMP=$(date +%Y%m%d-%H%M%S)
-          
-          # Set prefix based on branch
-          if [ "$BRANCH_NAME" = "develop" ]; then
-            PREFIX="dev"
-          elif [ "$BRANCH_NAME" = "main" ]; then
-            PREFIX="rc"
-          fi
-          
-          VERSION="${PREFIX}-${TIMESTAMP}-${SHA_SHORT}"
-          
-          echo "prefix=$PREFIX" >> $GITHUB_OUTPUT
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
-          echo "sha=$SHA_SHORT" >> $GITHUB_OUTPUT
-          echo "timestamp=$TIMESTAMP" >> $GITHUB_OUTPUT
-
       - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
@@ -59,7 +38,7 @@ jobs:
           for dir in artifacts/firmware-*; do
             env_name=$(basename "$dir" | sed 's/firmware-//')
             if [ -f "$dir/firmware.hex" ]; then
-              cp "$dir/firmware.hex" "release/fsdiy-spad-${env_name}-${{ steps.version.outputs.version }}.hex"
+              cp "$dir/firmware.hex" "release/fsdiy-spad-${env_name}-${{ needs.build.outputs.version }}.hex"
             fi
           done
           
@@ -69,21 +48,20 @@ jobs:
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
-          name: ${{ steps.version.outputs.prefix == 'dev' && 'dev' || 'rc' }}-${{ steps.version.outputs.timestamp }}
+          name: ${{ needs.build.outputs.version }}
           files: release/*
           prerelease: true
           fail_on_unmatched_files: true
           body: |
-            **Build Type:** `${{ steps.version.outputs.prefix }}`
-            **Version:** `${{ steps.version.outputs.version }}`
-            **Commit:** `${{ steps.version.outputs.sha }}`
-            **Time:** `${{ steps.version.outputs.timestamp }}`
+            **Build Type:** `${{ needs.build.outputs.prefix }}`
+            **Version:** `${{ needs.build.outputs.version }}`
+            **Commit:** `${{ needs.build.outputs.sha }}`
             
             ### Firmware Files:
-            - **G1000 NXi PFD1**: `fsdiy-spad-g1000nxi_pfd1-${{ steps.version.outputs.version }}.hex`
-            - **G1000 NXi MFD**: `fsdiy-spad-g1000nxi_mfd-${{ steps.version.outputs.version }}.hex`
-            - **G1000 NXi PFD2**: `fsdiy-spad-g1000nxi_pfd2-${{ steps.version.outputs.version }}.hex`
-            - **GMA1347**: `fsdiy-spad-gma1347-${{ steps.version.outputs.version }}.hex`
-            - **GCU478**: `fsdiy-spad-gcu478-${{ steps.version.outputs.version }}.hex`
+            - **G1000 NXi PFD1**: `fsdiy-spad-g1000nxi_pfd1-${{ needs.build.outputs.version }}.hex`
+            - **G1000 NXi MFD**: `fsdiy-spad-g1000nxi_mfd-${{ needs.build.outputs.version }}.hex`
+            - **G1000 NXi PFD2**: `fsdiy-spad-g1000nxi_pfd2-${{ needs.build.outputs.version }}.hex`
+            - **GMA1347**: `fsdiy-spad-gma1347-${{ needs.build.outputs.version }}.hex`
+            - **GCU478**: `fsdiy-spad-gcu478-${{ needs.build.outputs.version }}.hex`
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
