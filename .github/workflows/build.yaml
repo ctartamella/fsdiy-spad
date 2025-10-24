@@ -71,6 +71,7 @@ jobs:
               ;;
           esac
           
+          echo $PLATFORMIO_BUILD_FLAGS
           pio run -e ${{ matrix.environment }}
       - name: Upload firmware artifact
         uses: actions/upload-artifact@v4
