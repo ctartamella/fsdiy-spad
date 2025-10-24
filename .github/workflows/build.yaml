@@ -1,0 +1,68 @@
+name: FSDIYSpad Build
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  release:
+    types: [ created ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        environment:
+          - g1000nxi_pfd1
+          - g1000nxi_mfd
+          - g1000nxi_pfd2
+          - gma1347
+          - gcu478
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Cache pip
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Cache PlatformIO
+        uses: actions/cache@v3
+        with:
+          path: ~/.platformio
+          key: ${{ runner.os }}-${{ hashFiles('**/lockfiles') }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install PlatformIO
+        run: |
+          python -m pip install --upgrade pip
+          pip install --upgrade platformio
+
+      - name: Create dummy secrets (for CI)
+        run: |
+          cat > platformio_override.ini << EOF
+          [env]
+          build_flags = 
+              -DSPAD_AUTH_KEY='"PLACEHOLDER_FOR_CI_BUILD"'
+              -DWIFI_SSID='"PLACEHOLDER_SSID"'
+              -DWIFI_PASSWORD='"PLACEHOLDER_PASS"'
+          EOF
+
+      - name: Build firmware
+        run: pio run -e ${{ matrix.environment }}
+
+      - name: Upload firmware artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: firmware-${{ matrix.environment }}
+          path: .pio/build/${{ matrix.environment }}/firmware.hex

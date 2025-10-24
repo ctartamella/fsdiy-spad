@@ -1,0 +1,53 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install PlatformIO
+        run: |
+          python -m pip install --upgrade pip
+          pip install --upgrade platformio
+
+      - name: Get version
+        id: version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
+      - name: Create dummy secrets
+        run: |
+          cat > platformio_override.ini << EOF
+          [env]
+          build_flags = 
+              -DSPAD_AUTH_KEY='"CONFIGURE_YOUR_KEY"'
+              -DFIRMWARE_VERSION='"${{ steps.version.outputs.VERSION }}"'
+          EOF
+
+      - name: Build firmware
+        run: pio run -e megaatmega2560
+
+      - name: Prepare release
+        run: |
+          mkdir -p release
+          cp .pio/build/megaatmega2560/firmware.hex release/firmware-mega2560-${{ steps.version.outputs.VERSION }}.hex
+          cd release
+          sha256sum *.hex > checksums.txt
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: release/*
+env:
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
