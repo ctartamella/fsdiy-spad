@@ -28,15 +28,20 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          key: ${{ runner.os }}-pip-${{ hashFiles('platformio.ini') }}
           restore-keys: |
-            ${{ runner.os }}-pip-
+            ${{ runner.os }}-pip
 
       - name: Cache PlatformIO
         uses: actions/cache@v3
         with:
-          path: ~/.platformio
-          key: ${{ runner.os }}-${{ hashFiles('**/lockfiles') }}
+          path: |
+            ~/.platformio/.cache
+            ~/.platformio/packages
+            ~/.platformio/platforms
+          key: ${{ runner.os }}-pio-${{ hashFiles('**/platformio.ini') }}
+          restore-keys: |
+            ${{ runner.os }}-pio-
 
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -50,12 +55,12 @@ jobs:
 
       - name: Build firmware
         run: |          
-          PLATFORMIO_BUILD_FLAGS="--build-flag=-D SPAD_AUTHKEY="${{ secrets.SPAD_AUTHKEY }}""
-          PLATFORMIO_BUILD_FLAGS="$PLATFORMIO_BUILD_FLAGS --build-flag=-D SPAD_DEVICEVERSION="${{ steps.version.outputs.VERSION }}""
+          PLATFORMIO_BUILD_FLAGS="--build-flag=-D SPAD_AUTHKEY="authkey""
+          PLATFORMIO_BUILD_FLAGS="$PLATFORMIO_BUILD_FLAGS --build-flag=-D SPAD_DEVICEVERSION="version""
           
           case ${{ matrix.environment }} in
             g1000nxi_pfd1)
-              PLATFORMIO_BUILD_FLAGS="$PLATFORMIO_BUILD_FLAGS --build-flag=-D SPAD_DEVICEID="\"${{ secrets.G1000PFD1_DEVICEID }}\"""
+              PLATFORMIO_BUILD_FLAGS="$PLATFORMIO_BUILD_FLAGS --build-flag=-D SPAD_DEVICEID="\"guid\"""
               ;;
             g1000nxi_mfd)
               PLATFORMIO_BUILD_FLAGS="$PLATFORMIO_BUILD_FLAGS --build-flag=-D SPAD_DEVICEID="\"${{ secrets.G1000MFD_DEVICEID }}\"""
