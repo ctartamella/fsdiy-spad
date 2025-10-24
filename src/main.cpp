@@ -21,6 +21,19 @@
 #include "devices/Gcu478.h"
 #include "devices/SpadDevice.h"
 
+// Compile-time check
+#ifndef SPAD_AUTHKEY
+#error "Please copy platformio_override.example.ini to platformio_override.ini and configure your secrets"
+#endif
+
+#ifndef SPAD_DEVICEID
+#error "Please copy platformio_override.example.ini to platformio_override.ini and configure your secrets"
+#endif
+
+#ifndef SPAD_DEVICENAME
+#error "Please copy platformio_override.example.ini to platformio_override.ini and configure your secrets"
+#endif
+
 SpadDevice * device;
 
 SpadDevice* GetDeviceSingleton() {

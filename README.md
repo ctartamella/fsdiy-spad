@@ -22,8 +22,11 @@ This firmware is not connected to or affiliated with the flightsimdiy.com projec
    - VS Code: install the PlatformIO IDE extension
    - CLI: pip install -U platformio
 2. Clone this repository.
-3. Connect an Arduino Mega 2560.
-4. If needed, adjust the serial port in your PlatformIO configuration or let PlatformIO auto-detect.
+3. Copy `platformio_override.example.ini` to `platformio_override.ini`.
+   - You can get your SPAD.neXt authentication key via their Discord server.  See their website and docs for details.
+   - Device GUIDS are at your choosing.  Ensure it is surrounded with curly braces e.g. `{GUID}`.
+4. Connect an Arduino Mega 2560.
+5. If needed, adjust the serial port in your PlatformIO configuration or let PlatformIO auto-detect.
 
 ## Build, Upload, and Monitor
 
@@ -42,36 +45,6 @@ Available environments include:
 - `gma1347`
 - `gcu378`
 
-## Environments and Configuration
-
-platformio.ini defines common build flags and per-device flags:
-
-Common flags (applied to all environments):
-
-- SPAD_AUTHKEY
-- SPAD_DEVICEVERSION
-
-Per-environment flags:
-
-- FSDIY_G1000 / FSDIY_G1000_PFD1 | FSDIY_G1000_MFD | FSDIY_G1000_PFD2
-- FSDIY_GMA1347
-- SPAD_DEVICEID
-- SPAD_DEVICENAME
-
-These are preprocessor macros, not OS environment variables. Edit platformio.ini to change them. Example snippet:
-
-[env:g1000nxi_pfd1]
-build_flags =
-    ${env.build_flags}
-    -D FSDIY_G1000
-    -D FSDIY_G1000_PFD1
-    -D SPAD_DEVICEID="\"{63C4EC7B-DF0C-46EA-BEB8-EBBE3255B4BD}\""
-    -D SPAD_DEVICENAME="\"FSDIY G1000 NXi PFD1\""
-
-Device selection
-
-- See src/Singletons.cpp: it constructs the appropriate device class based on the defined macros (G1000Nxi or Gma1347).
-
 ## Scripts and Tasks
 
 No custom scripts are included. Use PlatformIO tasks/targets:
@@ -83,30 +56,11 @@ No custom scripts are included. Use PlatformIO tasks/targets:
 
 In IDEs, these appear under PlatformIO: Build, Upload, Clean, Monitor.
 
-## Runtime Behavior
-
-- src/main.cpp initializes Serial and Serial1 at 115200, sets up CmdMessenger callbacks, and delegates to the selected SpadDevice implementation.
-- The code interfaces with SPAD.neXt commands/events via CmdMessenger. Unknown commands and supported features (LEDs, backlights) are handled conditionally depending on the device.
-
-## Configuration and Environment Variables
-
-- There are no OS environment variables required by the firmware.
-- Configuration is performed via preprocessor macros in platformio.ini as described above.
-- TODO: Document hardware pin assignments and wiring per device variant.
-
-## Tests
-
-No automated tests are present in this repository.
-
-- TODO: Add unit tests (e.g., Unity/ArduinoUnit) for protocol parsing and device logic where feasible.
-
 ## License
 
-No license file detected.
-
-- TODO: Add a LICENSE file to clarify usage and distribution terms.
+This project is licensed under the GNU General Public License v3.0—see the [LICENSE](LICENSE) file for details.
 
 ## Acknowledgements
 
-- CmdMessenger library by Thijs Elenbaas
-- Additional libraries credited via PlatformIO lib_deps
+- LT McComb and the crew at [flightsimdiy.com](https://flightsimdiy.com) for their hardware!
+- c0nnex for [SPAD.neXt](https://www.spadnext.com/)
