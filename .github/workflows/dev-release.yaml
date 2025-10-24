@@ -6,6 +6,9 @@ on:
       - develop
       - main
 
+permissions:
+  contents: write
+  
 jobs:
   build:
     uses: ./.github/workflows/build.yaml
