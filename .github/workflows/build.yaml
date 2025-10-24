@@ -49,30 +49,29 @@ jobs:
           pip install --upgrade platformio
 
       - name: Build firmware
-        run: |
+        run: |          
+          PLATFORMIO_BUILD_FLAGS="--build-flag='-DSPAD_AUTHKEY="${{ secrets.SPAD_AUTHKEY }}"'"
+          PLATFORMIO_BUILD_FLAGS="$PLATFORMIO_BUILD_FLAGS --build-flag='-DFIRMWARE_VERSION="${{ steps.version.outputs.VERSION }}"'"
+          
           case "${{ matrix.environment }}" in
             g1000nxi_pfd1)
-              BUILD_ARGS="$BUILD_ARGS --build-flag='-DSPAD_DEVICEID="${{ secrets.G1000PFD1_DEVICEID }}"'"
+              PLATFORMIO_BUILD_FLAGS="$PLATFORMIO_BUILD_FLAGS --build-flag='-DSPAD_DEVICEID="${{ secrets.G1000PFD1_DEVICEID }}"'"
               ;;
             g1000nxi_mfd)
-              BUILD_ARGS="$BUILD_ARGS --build-flag='-DSPAD_DEVICEID="${{ secrets.G1000MFD_DEVICEID }}"'"
+              PLATFORMIO_BUILD_FLAGS="$PLATFORMIO_BUILD_FLAGS --build-flag='-DSPAD_DEVICEID="${{ secrets.G1000MFD_DEVICEID }}"'"
               ;;
             g1000nxi_pfd2)
-              BUILD_ARGS="$BUILD_ARGS --build-flag='-DSPAD_DEVICEID="${{ secrets.G1000PFD2_DEVICEID }}"'"
+              PLATFORMIO_BUILD_FLAGS="$PLATFORMIO_BUILD_FLAGS --build-flag='-DSPAD_DEVICEID="${{ secrets.G1000PFD2_DEVICEID }}"'"
               ;;
             gma1347)
-              BUILD_ARGS="$BUILD_ARGS --build-flag='-DSPAD_DEVICEID="${{ secrets.GMA1347_DEVICEID }}"'"
+              PLATFORMIO_BUILD_FLAGS="$PLATFORMIO_BUILD_FLAGS --build-flag='-DSPAD_DEVICEID="${{ secrets.GMA1347_DEVICEID }}"'"
               ;;
             gcu478)
-              BUILD_ARGS="$BUILD_ARGS --build-flag='-DSPAD_DEVICEID="${{ secrets.GCU478_DEVICEID }}"'"
+              PLATFORMIO_BUILD_FLAGS="$PLATFORMIO_BUILD_FLAGS --build-flag='-DSPAD_DEVICEID="${{ secrets.GCU478_DEVICEID }}"'"
               ;;
           esac
           
-          pio run -e ${{ matrix.environment }} \
-            --build-flag='-DSPAD_AUTHKEY="${{ secrets.SPAD_AUTHKEY }}"' \
-            --build-flag='-DFIRMWARE_VERSION="${{ steps.version.outputs.VERSION }}"' \
-            $BUILD_ARGS
-
+          pio run -e ${{ matrix.environment }}
       - name: Upload firmware artifact
         uses: actions/upload-artifact@v4
         with:
