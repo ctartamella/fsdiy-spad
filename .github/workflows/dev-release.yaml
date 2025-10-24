@@ -8,7 +8,7 @@ on:
 
 permissions:
   contents: write
-  
+
 jobs:
   build:
     uses: ./.github/workflows/build.yaml
@@ -71,6 +71,7 @@ jobs:
           name: ${{ steps.version.outputs.prefix == 'dev' && 'dev' || 'rc' }}-${{ steps.version.outputs.timestamp }}
           files: release/*
           prerelease: true
+          fail_on_unmatched_files: true
           body: |
             **Build Type:** `${{ steps.version.outputs.prefix }}`
             **Version:** `${{ steps.version.outputs.version }}`
