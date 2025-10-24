@@ -53,7 +53,7 @@ jobs:
           PLATFORMIO_BUILD_FLAGS="--build-flag='-DSPAD_AUTHKEY="${{ secrets.SPAD_AUTHKEY }}"'"
           PLATFORMIO_BUILD_FLAGS="$PLATFORMIO_BUILD_FLAGS --build-flag='-DFIRMWARE_VERSION="${{ steps.version.outputs.VERSION }}"'"
           
-          case "${{ matrix.environment }}" in
+          case ${{ matrix.environment }} in
             g1000nxi_pfd1)
               PLATFORMIO_BUILD_FLAGS="$PLATFORMIO_BUILD_FLAGS --build-flag='-DSPAD_DEVICEID="${{ secrets.G1000PFD1_DEVICEID }}"'"
               ;;
