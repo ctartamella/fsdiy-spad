@@ -55,14 +55,14 @@ jobs:
 
       - name: Build firmware
         env:
-#          SPAD_DEVICENAME: "${{ matrix.environment == 'g1000nxi_pfd1' && 'FSDIY G1000 NXi PFD1' || matrix.environment == 'g1000nxi_mfd' && 'FSDIY G1000 NXi MFD' || matrix.environment == 'g1000nxi_pfd2' && 'FSDIY G1000 NXi PFD2' || matrix.environment == 'gma1347' && 'FSDIY GMA1347' || matrix.environment == 'gcu478' && 'FSDIY GCU478' }}"
-#          SPAD_DEVICEID: "${{ matrix.environment == 'g1000nxi_pfd1' && secrets.G1000PFD1_DEVICEID || matrix.environment == 'g1000nxi_mfd' && secrets.G1000MFD_DEVICEID || matrix.environment == 'g1000nxi_pfd2' && secrets.G1000PFD2_DEVICEID || matrix.environment == 'gma1347' && secrets.GMA1347_DEVICEID || matrix.environment == 'gcu478' && secrets.GCU478_DEVICEID }}"
-#          SPAD_DEVICEVERSION: $GIT_VERSION
-#          SPAD_AUTHKEY: "\"${{ secrets.SPAD_AUTHKEY }}\""
-          SPAD_DEVICENAME: DEVICE
-          SPAD_DEVICEID: "{GUID}"
+          SPAD_DEVICENAME: ${{ matrix.environment == 'g1000nxi_pfd1' && 'FSDIY G1000 NXi PFD1' || matrix.environment == 'g1000nxi_mfd' && 'FSDIY G1000 NXi MFD' || matrix.environment == 'g1000nxi_pfd2' && 'FSDIY G1000 NXi PFD2' || matrix.environment == 'gma1347' && 'FSDIY GMA1347' || matrix.environment == 'gcu478' && 'FSDIY GCU478' }}
+          SPAD_DEVICEID: "{${{ matrix.environment == 'g1000nxi_pfd1' && secrets.G1000PFD1_DEVICEID || matrix.environment == 'g1000nxi_mfd' && secrets.G1000MFD_DEVICEID || matrix.environment == 'g1000nxi_pfd2' && secrets.G1000PFD2_DEVICEID || matrix.environment == 'gma1347' && secrets.GMA1347_DEVICEID || matrix.environment == 'gcu478' && secrets.GCU478_DEVICEID }}}"
           SPAD_DEVICEVERSION: $GIT_VERSION
           SPAD_AUTHKEY: "${{ secrets.SPAD_AUTHKEY }}"
+#          SPAD_DEVICENAME: DEVICE
+#          SPAD_DEVICEID: "{GUID}"
+#          SPAD_DEVICEVERSION: $GIT_VERSION
+#          SPAD_AUTHKEY: "${{ secrets.SPAD_AUTHKEY }}"
         run: |          
           echo "Building for environment: " $SPAD_DEVICENAME
           echo "Version: " $SPAD_DEVICEVERSION
