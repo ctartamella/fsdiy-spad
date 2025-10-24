@@ -5,6 +5,8 @@ on:
     branches:
       - develop
       - main
+    tags-ignore:
+      - '**'  # Don't trigger on any tag pushes
 
 permissions:
   contents: write
@@ -67,7 +69,6 @@ jobs:
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: ${{ steps.version.outputs.version }}
           name: ${{ steps.version.outputs.prefix == 'dev' && 'dev' || 'rc' }}-${{ steps.version.outputs.timestamp }}
           files: release/*
           prerelease: true

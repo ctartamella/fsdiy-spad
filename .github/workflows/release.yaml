@@ -65,6 +65,10 @@ jobs:
           1. Download the appropriate .hex file for your device
           2. Flash using your preferred Arduino upload tool
           3. Verify checksums.txt for file integrity
+          4. Add a serial device inside SPAD.  Be sure to select the correct COM port.  Default settings are fine.
+          5. Restart SPAD.
+          
+          **COMING SOON** SPAD.neXt profiles.
           
           For more information, see the README.md in the repository.
           EOF
