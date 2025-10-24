@@ -50,24 +50,24 @@ jobs:
 
       - name: Build firmware
         run: |          
-          PLATFORMIO_BUILD_FLAGS="--build-flag='-DSPAD_AUTHKEY="${{ secrets.SPAD_AUTHKEY }}"'"
-          PLATFORMIO_BUILD_FLAGS="$PLATFORMIO_BUILD_FLAGS --build-flag='-DFIRMWARE_VERSION="${{ steps.version.outputs.VERSION }}"'"
+          PLATFORMIO_BUILD_FLAGS="--build-flag=-D SPAD_AUTHKEY="${{ secrets.SPAD_AUTHKEY }}""
+          PLATFORMIO_BUILD_FLAGS="$PLATFORMIO_BUILD_FLAGS --build-flag=-D SPAD_DEVICEVERSION="${{ steps.version.outputs.VERSION }}""
           
           case ${{ matrix.environment }} in
             g1000nxi_pfd1)
-              PLATFORMIO_BUILD_FLAGS="$PLATFORMIO_BUILD_FLAGS --build-flag='-DSPAD_DEVICEID="${{ secrets.G1000PFD1_DEVICEID }}"'"
+              PLATFORMIO_BUILD_FLAGS="$PLATFORMIO_BUILD_FLAGS --build-flag=-D SPAD_DEVICEID="\"${{ secrets.G1000PFD1_DEVICEID }}\"""
               ;;
             g1000nxi_mfd)
-              PLATFORMIO_BUILD_FLAGS="$PLATFORMIO_BUILD_FLAGS --build-flag='-DSPAD_DEVICEID="${{ secrets.G1000MFD_DEVICEID }}"'"
+              PLATFORMIO_BUILD_FLAGS="$PLATFORMIO_BUILD_FLAGS --build-flag=-D SPAD_DEVICEID="\"${{ secrets.G1000MFD_DEVICEID }}\"""
               ;;
             g1000nxi_pfd2)
-              PLATFORMIO_BUILD_FLAGS="$PLATFORMIO_BUILD_FLAGS --build-flag='-DSPAD_DEVICEID="${{ secrets.G1000PFD2_DEVICEID }}"'"
+              PLATFORMIO_BUILD_FLAGS="$PLATFORMIO_BUILD_FLAGS --build-flag=-D SPAD_DEVICEID="\"${{ secrets.G1000PFD2_DEVICEID }}\"""
               ;;
             gma1347)
-              PLATFORMIO_BUILD_FLAGS="$PLATFORMIO_BUILD_FLAGS --build-flag='-DSPAD_DEVICEID="${{ secrets.GMA1347_DEVICEID }}"'"
+              PLATFORMIO_BUILD_FLAGS="$PLATFORMIO_BUILD_FLAGS --build-flag=-D SPAD_DEVICEID="\"${{ secrets.GMA1347_DEVICEID }}\"""
               ;;
             gcu478)
-              PLATFORMIO_BUILD_FLAGS="$PLATFORMIO_BUILD_FLAGS --build-flag='-DSPAD_DEVICEID="${{ secrets.GCU478_DEVICEID }}"'"
+              PLATFORMIO_BUILD_FLAGS="$PLATFORMIO_BUILD_FLAGS --build-flag=-D SPAD_DEVICEID="\"${{ secrets.GCU478_DEVICEID }}\"""
               ;;
           esac
           
