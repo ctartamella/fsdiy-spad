@@ -60,20 +60,25 @@ jobs:
           
           case ${{ matrix.environment }} in
             g1000nxi_pfd1)
+              echo "Building for G1000 PFD1"
               PLATFORMIO_BUILD_FLAGS="$PLATFORMIO_BUILD_FLAGS --build-flag=-D SPAD_DEVICEID="\"guid\"""
               ;;
             g1000nxi_mfd)
+              echo "Building for G1000 MFD"
               PLATFORMIO_BUILD_FLAGS="$PLATFORMIO_BUILD_FLAGS --build-flag=-D SPAD_DEVICEID="\"${{ secrets.G1000MFD_DEVICEID }}\"""
               ;;
             g1000nxi_pfd2)
+              echo "Building for G1000 PFD2"
               PLATFORMIO_BUILD_FLAGS="$PLATFORMIO_BUILD_FLAGS --build-flag=-D SPAD_DEVICEID="\"${{ secrets.G1000PFD2_DEVICEID }}\"""
               ;;
             gma1347)
+              echo "Building for GMA1347"
               PLATFORMIO_BUILD_FLAGS="$PLATFORMIO_BUILD_FLAGS --build-flag=-D SPAD_DEVICEID="\"${{ secrets.GMA1347_DEVICEID }}\"""
               ;;
             gcu478)
+              echo "Building for GCU478"
               PLATFORMIO_BUILD_FLAGS="$PLATFORMIO_BUILD_FLAGS --build-flag=-D SPAD_DEVICEID="\"${{ secrets.GCU478_DEVICEID }}\"""
-              ;;
+              ;;          
           esac
           
           echo $PLATFORMIO_BUILD_FLAGS

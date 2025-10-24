@@ -16,6 +16,7 @@
 
 #include <Arduino.h>
 
+#include "Version.h"
 #include "devices/G1000nxi.h"
 #include "devices/Gma1347.h"
 #include "devices/Gcu478.h"
@@ -37,6 +38,8 @@
 SpadDevice * device;
 
 SpadDevice* GetDeviceSingleton() {
+  printVersion();
+
 #if defined(FSDIY_G1000_PFD1)
   static G1000Nxi inst;
   return &inst;
