@@ -48,18 +48,30 @@ jobs:
           python -m pip install --upgrade pip
           pip install --upgrade platformio
 
-      - name: Create dummy secrets (for CI)
-        run: |
-          cat > platformio_override.ini << EOF
-          [env]
-          build_flags = 
-              -DSPAD_AUTH_KEY='"PLACEHOLDER_FOR_CI_BUILD"'
-              -DWIFI_SSID='"PLACEHOLDER_SSID"'
-              -DWIFI_PASSWORD='"PLACEHOLDER_PASS"'
-          EOF
-
       - name: Build firmware
-        run: pio run -e ${{ matrix.environment }}
+        run: |
+          case "${{ matrix.environment }}" in
+            g1000nxi_pfd1)
+              BUILD_ARGS="$BUILD_ARGS --build-flag='-DSPAD_DEVICEID="${{ secrets.G1000PFD1_DEVICEID }}"'"
+              ;;
+            g1000nxi_mfd)
+              BUILD_ARGS="$BUILD_ARGS --build-flag='-DSPAD_DEVICEID="${{ secrets.G1000MFD_DEVICEID }}"'"
+              ;;
+            g1000nxi_pfd2)
+              BUILD_ARGS="$BUILD_ARGS --build-flag='-DSPAD_DEVICEID="${{ secrets.G1000PFD2_DEVICEID }}"'"
+              ;;
+            gma1347)
+              BUILD_ARGS="$BUILD_ARGS --build-flag='-DSPAD_DEVICEID="${{ secrets.GMA1347_DEVICEID }}"'"
+              ;;
+            gcu478)
+              BUILD_ARGS="$BUILD_ARGS --build-flag='-DSPAD_DEVICEID="${{ secrets.GCU478_DEVICEID }}"'"
+              ;;
+          esac
+          
+          pio run -e ${{ matrix.environment }} \
+            --build-flag='-DSPAD_AUTHKEY="${{ secrets.SPAD_AUTHKEY }}"' \
+            --build-flag='-DFIRMWARE_VERSION="${{ steps.version.outputs.VERSION }}"' \
+            $BUILD_ARGS
 
       - name: Upload firmware artifact
         uses: actions/upload-artifact@v4
