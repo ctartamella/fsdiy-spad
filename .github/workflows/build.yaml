@@ -58,9 +58,9 @@ jobs:
         env:
           ENV_MESSAGE: "Building for G1000 PFD1"
           PLATFORMIO_BUILD_FLAGS: |
-            --build-flag=-D SPAD_AUTHKEY=\"authkey\"
-            --build-flag=-D SPAD_DEVICEVERSION=0.5
-            --build-flag=-D SPAD_DEVICEID=\"{guid}\"
+            -DSPAD_AUTHKEY=\"authkey\"
+            -DSPAD_DEVICEVERSION=0.5
+            -DSPAD_DEVICEID=\"{guid}\"
         run: |          
           echo $ENV_MESSAGE         
           echo $PLATFORMIO_BUILD_FLAGS
