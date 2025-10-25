@@ -9,59 +9,9 @@ on:
       - '**'  # Don't trigger on any tag pushes
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   build:
     uses: ./.github/workflows/build.yaml
     secrets: inherit
-
-  create-dev-release:
-    needs: build
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-
-      - name: Download all artifacts
-        uses: actions/download-artifact@v4
-        with:
-          pattern: firmware-*
-          path: artifacts
-
-      - name: Prepare release files
-        run: |
-          mkdir -p release
-          
-          for dir in artifacts/firmware-*; do
-            env_name=$(basename "$dir" | sed 's/firmware-//')
-            if [ -f "$dir/firmware.hex" ]; then
-              cp "$dir/firmware.hex" "release/fsdiy-spad-${env_name}-${{ needs.build.outputs.version }}.hex"
-            fi
-          done
-          
-          cd release
-          sha256sum *.hex > checksums.txt
-
-      - name: Create Release
-        uses: softprops/action-gh-release@v1
-        with:
-          name: ${{ needs.build.outputs.version }}
-          files: release/*
-          prerelease: true
-          fail_on_unmatched_files: true
-          body: |
-            **Build Type:** `${{ needs.build.outputs.prefix }}`
-            **Version:** `${{ needs.build.outputs.version }}`
-            **Commit:** `${{ needs.build.outputs.sha }}`
-            
-            ### Firmware Files:
-            - **G1000 NXi PFD1**: `fsdiy-spad-g1000nxi_pfd1-${{ needs.build.outputs.version }}.hex`
-            - **G1000 NXi MFD**: `fsdiy-spad-g1000nxi_mfd-${{ needs.build.outputs.version }}.hex`
-            - **G1000 NXi PFD2**: `fsdiy-spad-g1000nxi_pfd2-${{ needs.build.outputs.version }}.hex`
-            - **GMA1347**: `fsdiy-spad-gma1347-${{ needs.build.outputs.version }}.hex`
-            - **GCU478**: `fsdiy-spad-gcu478-${{ needs.build.outputs.version }}.hex`
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
