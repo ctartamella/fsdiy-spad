@@ -5,6 +5,9 @@ on:
     tags:
       - 'v*.*.*'  # Semantic versioning: v1.0.0, v2.1.3, etc.
 
+permissions:
+  contents: write
+
 jobs:
   build:
     uses: ./.github/workflows/build.yaml
@@ -25,6 +28,10 @@ jobs:
           pattern: firmware-*
           path: artifacts
 
+      - name: Get tag name
+        id: get_tag
+        run: echo "tag=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+        
       - name: Prepare release files
         run: |
           mkdir -p release
@@ -69,7 +76,6 @@ jobs:
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: ${{ needs.build.outputs.version }}
           files: release/*
           generate_release_notes: true
           draft: false
