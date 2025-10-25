@@ -24,6 +24,9 @@ void SpadDevice::setup() const
   const auto buttonBacklight = getButtonBacklight();
   const auto ledBacklight = getLedBacklight();
 
+  _protocol->sendDebugMessage(F("FIRMWARE VERSION: "));
+  _protocol->sendDebugMessage({ SPAD_FIRMWAREVERSION });
+
   for (const auto& button : *buttons) {
     button.initializePin();
   }

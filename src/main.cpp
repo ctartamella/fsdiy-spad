@@ -16,30 +16,16 @@
 
 #include <Arduino.h>
 
-#include "Version.h"
 #include "devices/G1000nxi.h"
 #include "devices/Gma1347.h"
 #include "devices/Gcu478.h"
 #include "devices/SpadDevice.h"
 
-// Compile-time check
-#ifndef SPAD_AUTHKEY
-#error "Please copy platformio_override.example.ini to platformio_override.ini and configure your secrets"
-#endif
-
-#ifndef SPAD_DEVICEID
-#error "Please copy platformio_override.example.ini to platformio_override.ini and configure your secrets"
-#endif
-
-#ifndef SPAD_DEVICENAME
-#error "Please copy platformio_override.example.ini to platformio_override.ini and configure your secrets"
-#endif
+// Compile-time checks relaxed: allow building without secrets; device will report placeholders if missing.
 
 SpadDevice * device;
 
 SpadDevice* GetDeviceSingleton() {
-  printVersion();
-
 #if defined(FSDIY_G1000_PFD1)
   static G1000Nxi inst;
   return &inst;
@@ -56,7 +42,7 @@ SpadDevice* GetDeviceSingleton() {
   static Gcu478 inst;
   return &inst;
 #else
-  static_assert(false, "No device type macro defined");
+# error "No device type macro defined. Select an environment (e.g., g1000nxi_pfd1) or define one of FSDIY_G1000_PFD1, FSDIY_G1000_MFD, FSDIY_G1000_PFD2, FSDIY_GMA1347, FSDIY_GCU478."
 #endif
 }
 
