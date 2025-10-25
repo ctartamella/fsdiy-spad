@@ -69,7 +69,7 @@ jobs:
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: ${{ ste }}
+          tag_name: ${{ needs.build.outputs.version }}
           files: release/*
           generate_release_notes: true
           draft: false
