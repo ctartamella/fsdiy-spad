@@ -17,10 +17,23 @@
 #pragma once
 
 #include <vector>
-#include <CmdMessenger.h>
 #include <ComponentDefs.h>
 
-#define DEBUG
+#ifndef SPAD_FIRMWAREVERSION
+  #error "SPAD_FIRMWAREVERSION is not defined! Please define it in platformio.ini or copy example override file."
+#endif
+
+#ifndef SPAD_AUTHKEY
+  #error "SPAD_AUTHKEY is not defined! Please define it in platformio.ini or copy example override file."
+#endif
+
+#ifndef SPAD_DEVICEID
+  #error "SPAD_DEVICEID is not defined! Please define it in platformio.ini or copy example override file."
+#endif
+
+#ifndef SPAD_DEVICENAME
+  #error "SPAD_DEVICENAME is not defined! Please define it in platformio.ini or copy example override file."
+#endif
 
 class SpadDevice {
     friend class SpadProtocol;
@@ -41,7 +54,7 @@ protected:
     virtual String getAuthKey() const { return {SPAD_AUTHKEY}; }
     virtual String getDeviceId() const { return {SPAD_DEVICEID}; }
     virtual String getDeviceName() const { return {SPAD_DEVICENAME}; }
-    virtual String getDeviceVersion() const { return {SPAD_DEVICEVERSION}; }
+    virtual String getDeviceVersion() const { return {SPAD_FIRMWAREVERSION}; }
 
     // Hardware Definitions
     virtual std::vector<SpadButton> * getButtons() const;
